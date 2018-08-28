@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import sys
 from subprocess import PIPE, Popen
 
 from lektor.pluginsystem import Plugin
@@ -8,8 +9,11 @@ from lektor.types import Type
 def asciidoc_to_html(text):
     p = Popen(['asciidoctor', '-s','-'],
               stdin=PIPE, stdout=PIPE, stderr=PIPE)
+    if sys.version_info[0] < 3:
+        out, err = p.communicate(text)
+    else:
+        out, err = p.communicate(text.encode('utf-8'))
 
-    out, err = p.communicate(text.encode('utf-8'))
     if p.returncode !=  0:
         raise RuntimeError('asciidoctor: "%s"' % err)
 
@@ -29,7 +33,10 @@ class AsciiDocType(Type):
     widget = 'multiline-text'
 
     def value_from_raw(self, raw):
-        return HTML(asciidoc_to_html(raw.value or u'').decode('utf-8'))
+        if sys.version_info[0] < 3:
+            return HTML(asciidoc_to_html(raw.value or u''))
+        else:
+            return HTML(asciidoc_to_html(raw.value or u'').decode('utf-8'))
 
 
 class AsciiDocPlugin(Plugin):
