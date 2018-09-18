@@ -1,14 +1,16 @@
 # -*- coding: utf-8 -*-
-import sys
+import sys, os
 from subprocess import PIPE, Popen
 
 from lektor.pluginsystem import Plugin
 from lektor.types import Type
 
 
-def asciidoc_to_html(text):
-    p = Popen(['asciidoctor', '-s','-'],
-              stdin=PIPE, stdout=PIPE, stderr=PIPE)
+def asciidoctor_to_html(text):
+    if os.name == 'nt':
+        p = Popen(['asciidoctor.bat', '-s','-'], stdin=PIPE, stdout=PIPE, stderr=PIPE)
+    else:
+        p = Popen(['asciidoctor', '-s','-'], stdin=PIPE, stdout=PIPE, stderr=PIPE)
     if sys.version_info[0] < 3:
         out, err = p.communicate(text)
     else:
@@ -34,13 +36,13 @@ class AsciiDocType(Type):
 
     def value_from_raw(self, raw):
         if sys.version_info[0] < 3:
-            return HTML(asciidoc_to_html(raw.value or u''))
+            return HTML(asciidoctor_to_html(raw.value or u''))
         else:
-            return HTML(asciidoc_to_html(raw.value or u'').decode('utf-8'))
+            return HTML(asciidoctor_to_html(raw.value or u'').decode('utf-8'))
 
 
-class AsciiDocPlugin(Plugin):
-    name = u'AsciiDoc'
+class AsciiDoctorPlugin(Plugin):
+    name = u'AsciiDoctor'
     description = u'Adds AsciiDoc field type to Lektor.'
 
     def on_setup_env(self, **extra):
